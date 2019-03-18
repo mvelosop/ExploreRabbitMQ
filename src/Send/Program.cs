@@ -23,7 +23,7 @@ namespace Send
                     autoDelete: false,
                     arguments: null);
 
-                var message = "Hello RabbitMQ";
+                var message = "Startup message";
 
                 do
                 {
