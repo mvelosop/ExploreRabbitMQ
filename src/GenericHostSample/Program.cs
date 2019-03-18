@@ -20,16 +20,6 @@ namespace GenericHostSample
         {
             try
             {
-                //Log.Information("Configuring host ({ApplicationContext})...", AppName);
-                //var host = BuildHost(configuration, args);
-
-                //LogPackagesVersionInfo();
-
-                //Log.Information("Starting host ({ApplicationContext})...", AppName);
-                //await host.RunAsync();
-
-                //return 0;
-
                 var host = new HostBuilder()
                     .ConfigureHostConfiguration(configHost =>
                     {
@@ -51,7 +41,7 @@ namespace GenericHostSample
                     })
                     .ConfigureServices((hostContext, services) =>
                     {
-                        Console.WriteLine("Setting up app configuration...");
+                        Console.WriteLine("Setting up services configuration...");
 
                         ConfigureServices(hostContext, services);
                     })
@@ -71,11 +61,14 @@ namespace GenericHostSample
                             .ReadFrom.Configuration(hostContext.Configuration)
                             .CreateLogger();
 
-                        loggingBuilder.Services.AddSingleton(new LoggerFactory().AddSerilog());
-                        loggingBuilder.Services.AddLogging();
+                        loggingBuilder.Services
+                            .AddSingleton(new LoggerFactory().AddSerilog())
+                            .AddLogging();
                     })
                     .UseConsoleLifetime()
                     .Build();
+
+                Console.WriteLine("Starting up application...");
 
                 await host.RunAsync();
 
