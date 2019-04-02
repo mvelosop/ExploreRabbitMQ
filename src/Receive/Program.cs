@@ -19,7 +19,7 @@ namespace Receive
             {
                 channel.QueueDeclare(
                     queue: "hello",
-                    durable: false,
+                    durable: true,
                     exclusive: false,
                     autoDelete: false,
                     arguments: null);

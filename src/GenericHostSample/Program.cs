@@ -2,6 +2,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using RabbitMQ.Client;
 using Serilog;
 using System;
 using System.Collections.Generic;
@@ -68,7 +69,8 @@ namespace GenericHostSample
                     .UseConsoleLifetime()
                     .Build();
 
-                Console.WriteLine("Starting up application...");
+                Log.Logger.Information("===== Starting up application ({AppName}) on {AppStartDate:yyyy-MM-dd HH:mm:ss.fff}...", AppName, DateTime.Now);
+                LogPackageVersions();
 
                 await host.RunAsync();
 
@@ -89,6 +91,29 @@ namespace GenericHostSample
         {
             services.AddHostedService<LifetimeEventsHostedService>();
             services.AddHostedService<TimedHostedService>();
+            services.AddHostedService<MessageConsumer1Service>();
+            services.AddHostedService<MessageConsumer2Service>();
+
+            services.AddSingleton<IConnection>(sp =>
+            {
+                var factory = new ConnectionFactory { HostName = "localhost", DispatchConsumersAsync = true };
+                return factory.CreateConnection();
+            });
+
+            services.AddTransient<IModel>(sp =>
+            {
+                var connection = sp.GetRequiredService<IConnection>();
+                var channel = connection.CreateModel();
+
+                channel.QueueDeclare(
+                    queue: "hello",
+                    durable: true,
+                    exclusive: false,
+                    autoDelete: false,
+                    arguments: null);
+
+                return channel;
+            });
         }
 
         private static string GetVersion(Assembly assembly)
@@ -103,7 +128,7 @@ namespace GenericHostSample
             }
         }
 
-        private static void LogPackagesVersionInfo()
+        private static void LogPackageVersions()
         {
             var assemblies = new List<Assembly>();
 

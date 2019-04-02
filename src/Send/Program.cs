@@ -18,7 +18,7 @@ namespace Send
             {
                 channel.QueueDeclare(
                     queue: "hello",
-                    durable: false,
+                    durable: true,
                     exclusive: false,
                     autoDelete: false,
                     arguments: null);
@@ -29,10 +29,14 @@ namespace Send
                 {
                     var body = Encoding.UTF8.GetBytes(message);
 
+                    var properties = channel.CreateBasicProperties();
+
+                    properties.Persistent = true;
+
                     channel.BasicPublish(
                         exchange: "",
                         routingKey: "hello",
-                        basicProperties: null,
+                        basicProperties: properties,
                         body: body);
 
                     Console.WriteLine($"- Sent \"{message}\"");
