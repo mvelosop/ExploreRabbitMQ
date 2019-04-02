@@ -69,7 +69,7 @@ namespace GenericHostSample
                     .UseConsoleLifetime()
                     .Build();
 
-                Log.Logger.Information("Starting up application ({AppName})...", AppName);
+                Log.Logger.Information("===== Starting up application ({AppName}) on {AppStartDate:yyyy-MM-dd HH:mm:ss.fff}...", AppName, DateTime.Now);
                 LogPackageVersions();
 
                 await host.RunAsync();
@@ -96,7 +96,7 @@ namespace GenericHostSample
 
             services.AddSingleton<IConnection>(sp =>
             {
-                var factory = new ConnectionFactory { HostName = "localhost" };
+                var factory = new ConnectionFactory { HostName = "localhost", DispatchConsumersAsync = true };
                 return factory.CreateConnection();
             });
 
@@ -107,7 +107,7 @@ namespace GenericHostSample
 
                 channel.QueueDeclare(
                     queue: "hello",
-                    durable: false,
+                    durable: true,
                     exclusive: false,
                     autoDelete: false,
                     arguments: null);
