@@ -14,7 +14,7 @@ namespace GenericHostSample
     {
         private readonly IApplicationLifetime _appLifetime;
         private readonly IModel _channel;
-        private readonly int _consumer;
+        private readonly string _consumer;
         private readonly ILogger<MessageConsumer2Service> _logger;
 
         public MessageConsumer2Service(
@@ -26,7 +26,7 @@ namespace GenericHostSample
             _appLifetime = appLifetime ?? throw new ArgumentNullException(nameof(appLifetime));
             _channel = channel ?? throw new ArgumentNullException(nameof(channel));
 
-            _consumer = 2;
+            _consumer = "2";
             _logger.LogTrace("Creating consumer #{Consumer}", _consumer);
         }
 
@@ -66,46 +66,7 @@ namespace GenericHostSample
 
         private async Task Consumer_Received(object sender, BasicDeliverEventArgs ea)
         {
-            var body = ea.Body;
-            var message = Encoding.UTF8.GetString(body);
-
-            try
-            {
-                _logger.LogInformation("----- Received @#{Consumer} \"{message}\"", _consumer, message);
-
-                if (message.Equals("shutdown", StringComparison.InvariantCultureIgnoreCase))
-                {
-                    _appLifetime.StopApplication();
-                }
-                else if (message.Contains("throw", StringComparison.InvariantCultureIgnoreCase) ||
-                    message.Contains("exception", StringComparison.InvariantCultureIgnoreCase))
-                {
-                    throw new InvalidOperationException($"Exception requested ({message})");
-                }
-                else if (message.EndsWith("."))
-                {
-                    var sw = new Stopwatch();
-                    var delay = 0;
-
-                    while (delay++ < message.Length - 1 && message[message.Length - 1 - delay] == '.') ;
-
-                    _logger.LogWarning("----- \"Processing\" message \"{Message}\" @#{Consumer} will take {Delay}ms", message, _consumer, delay * 100);
-
-                    sw.Start();
-                    while (delay-- > 0)
-                    {
-                        await Task.Delay(100);
-                    }
-
-                    _logger.LogInformation("----- Processing message: {Message} @#{Consumer} - DONE! ({Delay:n0})", message, _consumer, sw.ElapsedMilliseconds);
-                }
-            }
-            catch (Exception ex)
-            {
-                _logger.LogWarning(ex, "----- ERROR Processing message \"{Message}\" @#{Consumer}", message, _consumer);
-            }
-
-            _channel.BasicAck(ea.DeliveryTag, multiple: false);
+            await Consumer.ReceiveMessageAsync(_logger, _appLifetime, _consumer, _channel, sender, ea);
         }
     }
 }
